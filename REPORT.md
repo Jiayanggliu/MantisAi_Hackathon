@@ -16,13 +16,13 @@ job that was both is counted twice. We do not use it.
 Instead every job lands in **exactly one** bucket, keyed on average and peak SM utilisation. The
 buckets sum to 594,004 GPU-hours and 74,849 jobs by construction, so nothing is double counted.
 
-| Where it went | Rule | Jobs | GPU-hours | Cost | Verdict |
+| Where it went | Rule | Jobs | GPU-hours | Cost | Action |
 |---|---|---:|---:|---:|---|
-| **Paid for, never used** | avg **and** peak SM both exactly 0 | 19,887 | 97,196 | $242,991 | **Recover** |
-| **Barely touched** | avg < 5%, peak ≤ 20% | 5,448 | 26,284 | $65,710 | **Recover** |
-| Light but real use | avg < 5%, peak > 20% | 4,530 | 59,084 | $147,711 | Leave |
-| Moderate use | avg 5–20% | 11,059 | 68,609 | $171,523 | Leave |
-| Working hard | avg ≥ 20% | 33,925 | 342,830 | $857,075 | Leave |
+| **Paid for, never used** | avg **and** peak SM both exactly 0 | 19,887 | 97,196 | $242,991 | **Cut** |
+| **Barely touched** | avg < 5%, peak ≤ 20% | 5,448 | 26,284 | $65,710 | **Cut** |
+| Light but real use | avg < 5%, peak > 20% | 4,530 | 59,084 | $147,711 | Keep |
+| Moderate use | avg 5–20% | 11,059 | 68,609 | $171,523 | Keep |
+| Working hard | avg ≥ 20% | 33,925 | 342,830 | $857,075 | Keep |
 | | | **74,849** | **594,004** | **$1,485,010** | |
 
 **$308,700 bought nothing at all.**
