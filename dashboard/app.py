@@ -52,7 +52,7 @@ PLAIN = {
     "C": ("Moderate use", "Normal research work."),
     "D": ("Working hard", "This is the research. Do not touch it."),
 }
-ACT = {"A": "Recover", "B1": "Recover", "B2": "Leave", "C": "Leave", "D": "Leave"}
+ACT = {"A": "Cut", "B1": "Cut", "B2": "Keep", "C": "Keep", "D": "Keep"}
 
 st.title("Diagnose is all your need")
 st.markdown(
@@ -74,7 +74,7 @@ t1 = pd.DataFrame([
      "What that means": PLAIN[b["id"]][1],
      "Cost": b["usd"],
      "Share of spend": b["share"] * 100,
-     "Verdict": ACT[b["id"]]}
+     "Cut or keep": ACT[b["id"]]}
     for b in a["buckets"]
 ])
 st.dataframe(
@@ -85,14 +85,14 @@ st.dataframe(
         "Cost": st.column_config.NumberColumn(format="$%,.0f", width="small"),
         "Share of spend": st.column_config.ProgressColumn(
             format="%.1f%%", min_value=0, max_value=100, width="medium"),
-        "Verdict": st.column_config.TextColumn(width="small"),
+        "Cut or keep": st.column_config.TextColumn(width="small"),
     },
 )
 
 waste_usd = bucket["A"]["usd"] + bucket["B1"]["usd"]
 st.markdown(
     f"**\\${waste_usd:,.0f} of the \\${total_usd:,.0f} bought nothing at all.** "
-    f"The two rows marked *Recover* are GPUs that were reserved and never meaningfully used — "
+    f"The two rows marked *Cut* are GPUs that were reserved and never meaningfully used — "
     f"not research that merely ran slowly."
 )
 
