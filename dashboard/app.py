@@ -7,10 +7,14 @@ Serves on :3000.
 from __future__ import annotations
 
 import json
+import os
 from pathlib import Path
 
 import pandas as pd
+import requests
 import streamlit as st
+
+import agent as llm_agent
 
 ROOT = Path(__file__).resolve().parent.parent
 OUT = ROOT / "out"
@@ -446,3 +450,177 @@ for col, (rel, label, blurb) in zip(st.columns(len(TRACES)), TRACES):
             )
         else:
             st.caption("Not built — run `python scripts/make_trace.py`.")
+
+
+# ============================================================ AGENT
+st.divider()
+st.header("An agent, reading the trace against the API")
+st.caption(
+    "The trace shows which machines were failing. The MantisGrid AI API knows which findings "
+    "fired and what its causal analysis concluded. Neither alone settles a machine's fate — "
+    "this walks both and reports where they disagree."
+)
+
+MGAI = os.environ.get("MGAI_URL", "http://api:8000")
+
+
+@st.cache_data(ttl=600, show_spinner=False)
+def api_rank(limit: int = 10) -> list[dict]:
+    r = requests.get(f"{MGAI}/v1/resources/underperforming",
+                     params={"entity_type": "node", "limit": limit}, timeout=20)
+    r.raise_for_status()
+    return r.json()["rows"]
+
+
+@st.cache_data(ttl=600, show_spinner=False)
+def api_findings(resource_id: str) -> list[dict]:
+    r = requests.post(f"{MGAI}/v1/events/findings",
+                      json={"resource_id": resource_id, "limit": 400}, timeout=30)
+    r.raise_for_status()
+    return r.json()["findings"]
+
+
+@st.cache_data(ttl=600, show_spinner=False)
+def api_causal(finding_id: str) -> list[dict]:
+    r = requests.post(f"{MGAI}/v1/causal", json={"finding_id": finding_id}, timeout=30)
+    r.raise_for_status()
+    return r.json().get("findings", []) or []
+
+
+def trace_rate(node: str) -> tuple[int, int]:
+    """Failure rate the trace shows for one machine, over the whole window."""
+    n = jobs[jobs.primary_node == node]
+    return int((n.state_name == "FAILED").sum()), int(len(n))
+
+
+try:
+    rank = api_rank(8)
+except Exception as exc:  # the panel is analysis, never a reason the page fails
+    st.warning(f"The API is not answering ({exc.__class__.__name__}), so this panel is empty. "
+               "The three tiles above do not depend on it.")
+    rank = []
+
+if rank:
+    with st.spinner("Walking the API's ranking and asking `causal` about each machine …"):
+        rows, verdicts = [], {}
+        for r in rank:
+            node, rid = r["entity_id"], r["resource_id"]
+            failed, total = trace_rate(node)
+            try:
+                fs = api_findings(rid)
+            except Exception:
+                fs = []
+            detectors = {f["detectorId"].replace("rules::", "") for f in fs}
+            linked = [f for f in fs if f.get("rootCauses")]
+            verdict, culprit = "no causal chain", "—"
+            for f in linked[:3]:
+                try:
+                    ch = api_causal(f["id"])
+                except Exception:
+                    continue
+                if ch:
+                    top = ch[0]["culprit"][0]
+                    culprit = f"{top['type'].replace('k8s:', '')} {top['node']}"
+                    verdict = "resolves to " + ("this machine" if top["node"] == node
+                                                else "something else")
+                    break
+            verdicts[node] = (verdict, culprit, sorted(detectors))
+            rows.append({
+                "Machine": node,
+                "Findings (API)": r["finding_count"],
+                "Failed / ran (trace)": f"{failed:,} / {total:,}",
+                "Failure rate": (failed / total * 100) if total else 0.0,
+                "Causal verdict": verdict,
+                "Points at": culprit,
+            })
+
+    st.dataframe(
+        pd.DataFrame(rows), hide_index=True, width="stretch",
+        column_config={
+            "Machine": st.column_config.TextColumn(width="medium"),
+            "Findings (API)": st.column_config.NumberColumn(format="%,d", width="small"),
+            "Failed / ran (trace)": st.column_config.TextColumn(width="small"),
+            "Failure rate": st.column_config.ProgressColumn(
+                format="%.0f%%", min_value=0, max_value=100, width="medium"),
+            "Causal verdict": st.column_config.TextColumn(width="medium"),
+            "Points at": st.column_config.TextColumn(width="medium"),
+        },
+    )
+
+    FAULT = "r216287-n200569"
+    f_failed, f_total = trace_rate(FAULT)
+    top_node = rank[0]["entity_id"]
+    t_failed, t_total = trace_rate(top_node)
+    in_top = any(r["entity_id"] == FAULT for r in rank)
+
+    st.error(
+        f"**The ranking and the evidence disagree.** `/v1/resources/underperforming` puts "
+        f"**{top_node}** first on {rank[0]['finding_count']} findings — and across the whole "
+        f"window that machine failed {t_failed:,} of {t_total:,} jobs "
+        f"({t_failed / t_total:.0%}). Meanwhile **{FAULT}** "
+        f"{'is also in this list' if in_top else 'is **not in this list at all**'}, and it "
+        f"failed {f_failed:,} of {f_total:,} ({f_failed / f_total:.0%}) — 97% of them inside "
+        f"one week, three unrelated people, one SIGBUS signature that appears on no other "
+        f"machine in 3,917 jobs."
+    )
+    st.markdown(
+        "**Why the ranking misses it.** It sorts by how many findings name a machine, and by "
+        "its own documentation does not read `rootCauses`. A machine where one person ran a "
+        "broken script a thousand times collects a thousand findings; a machine that quietly "
+        "corrupts memory for a week collects far fewer. Counting findings measures how much "
+        "work a machine received, not how broken it is.\n\n"
+        "**So the agent does not stop at the ranking.** For each machine it pulls the findings, "
+        "follows any that carry `rootCauses` into `POST /v1/causal`, and reports what the chain "
+        "actually resolves to — the column above. That is the difference between *this machine "
+        "has many problems* and *this machine is the problem*."
+    )
+    st.caption(
+        "Tools used: `GET /v1/resources/underperforming`, `POST /v1/events/findings`, "
+        "`POST /v1/causal`. The same three are exposed to an LLM agent as `underperforming`, "
+        "`list_findings` and `causal` by `mcp_layer/server.py`. Everything above is computed "
+        "without a model, so the page runs with no API key."
+    )
+
+    st.subheader("Hand the evidence to a model")
+    st.caption(
+        "The table above is assembled by calling the API. This hands that evidence to a GLM "
+        "model and asks the question the ranking cannot answer on its own: which of these "
+        "machines should actually come out of service."
+    )
+
+    evidence_lines = [
+        f"{r['Machine']}: {r['Findings (API)']} findings raised by the API; "
+        f"measured failure rate {r['Failure rate']:.0f}% ({r['Failed / ran (trace)']} jobs); "
+        f"causal analysis {r['Causal verdict']}, pointing at {r['Points at']}."
+        for r in rows
+    ]
+    f_failed2, f_total2 = trace_rate(FAULT)
+    evidence_lines.append(
+        f"{FAULT}: {'present in' if in_top else 'ABSENT from'} the API ranking above; "
+        f"measured failure rate {f_failed2 / f_total2:.0%} ({f_failed2}/{f_total2} jobs), and "
+        f"97% inside one week. Three unrelated accounts hit exit status 135 (SIGBUS) on it and "
+        f"produce that status zero times across 3,917 jobs on every other machine. The scheduler "
+        f"never marked it down."
+    )
+    evidence = ("Machines under review, with what the API says and what the scheduler log "
+                "measures:\n\n" + "\n".join(evidence_lines))
+
+    with st.expander("The exact evidence the model is given"):
+        st.code(evidence, language="text")
+
+    if not llm_agent.available():
+        st.info(
+            "`FEATHERLESS_API_KEY` is not set in this container, so the model step is off. "
+            "Everything above still holds — it is computed from the API and the scheduler log, "
+            "not written by a model. Set the key in your shell and `docker compose up` passes "
+            "it through."
+        )
+    elif st.button("Ask the model", type="primary"):
+        with st.spinner("Asking …"):
+            try:
+                answer, model_used = llm_agent.triage(evidence)
+                st.success(answer)
+                st.caption(f"`{model_used}` via Featherless, given only the evidence above. "
+                           f"The key is read from the environment and is not in this repository.")
+            except Exception as exc:
+                st.warning(f"The model did not answer: {exc}. The analysis above is unaffected.")

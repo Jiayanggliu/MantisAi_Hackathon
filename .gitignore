@@ -17,3 +17,7 @@ __pycache__/
 out/
 # Local data bundles -- never commit anything derived from the MIT release
 data.zip
+
+# Never commit credentials
+.env
+*.key

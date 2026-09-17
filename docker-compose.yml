@@ -14,7 +14,12 @@ services:
       - ./scripts:/app/scripts:ro
       - ./data:/app/data:ro
       - ./out:/app/out
-    environment: [PYTHONUNBUFFERED=1]
+    environment:
+      - PYTHONUNBUFFERED=1
+      # Passed through from your shell; never stored in the repository.
+      - FEATHERLESS_API_KEY
+      - FEATHERLESS_BASE_URL
+      - FEATHERLESS_MODEL
     depends_on:
       api: {condition: service_healthy}
 
