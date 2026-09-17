@@ -454,11 +454,12 @@ for col, (rel, label, blurb) in zip(st.columns(len(TRACES)), TRACES):
 
 # ============================================================ AGENT
 st.divider()
-st.header("An agent, reading the trace against the API")
+st.header("Live diagnosis")
 st.caption(
-    "The trace shows which machines were failing. The MantisGrid AI API knows which findings "
-    "fired and what its causal analysis concluded. Neither alone settles a machine's fate — "
-    "this walks both and reports where they disagree."
+    "Press the button and a model triages the cluster's machines in front of you. The evidence "
+    "it gets is gathered live from the MantisGrid AI API — its ranking of underperforming "
+    "machines, the findings on each, and what its causal analysis resolves them to — beside "
+    "the failure rate we measure ourselves from the scheduler log."
 )
 
 MGAI = os.environ.get("MGAI_URL", "http://api:8000")
@@ -544,50 +545,11 @@ if rank:
                 "What causal analysis found": culprit,
             })
 
-    st.markdown(
-        "**The API's eight \"worst\" machines, and what is actually wrong with each.** "
-        "Left: how many problems the API logged against the machine — that is what it ranks "
-        "by. Middle: how often jobs really failed there, from the scheduler log. Right: what "
-        "the API's own causal analysis says the cause is when you follow the chain."
-    )
-    st.dataframe(
-        pd.DataFrame(rows), hide_index=True, width="stretch",
-        column_config={
-            "Machine": st.column_config.TextColumn(width="medium"),
-            "Problems the API logged": st.column_config.NumberColumn(format="%,d", width="small"),
-            "Jobs that failed here": st.column_config.TextColumn(width="small"),
-            "Failure rate": st.column_config.ProgressColumn(
-                format="%.0f%%", min_value=0, max_value=100, width="small"),
-            "Really at fault": st.column_config.TextColumn(width="small"),
-            "What causal analysis found": st.column_config.TextColumn(width="large"),
-        },
-    )
-
     FAULT = "r216287-n200569"
     f_failed, f_total = trace_rate(FAULT)
     top_node = rank[0]["entity_id"]
     t_failed, t_total = trace_rate(top_node)
     in_top = any(r["entity_id"] == FAULT for r in rank)
-
-    st.markdown(
-        f"**Ranking by finding count gets this wrong.** The API's first pick, `{top_node}`, "
-        f"failed {t_failed / t_total:.0%} of its jobs. `{FAULT}`, which "
-        f"{'is' if in_top else 'is not even'} in the list, failed {f_failed / f_total:.0%} — "
-        f"and `causal` is what tells them apart."
-    )
-    st.caption(
-        "Tools used: `GET /v1/resources/underperforming`, `POST /v1/events/findings`, "
-        "`POST /v1/causal`. The same three are exposed to an LLM agent as `underperforming`, "
-        "`list_findings` and `causal` by `mcp_layer/server.py`. Everything above is computed "
-        "without a model, so the page runs with no API key."
-    )
-
-    st.subheader("Live diagnosis — ask the model")
-    st.caption(
-        "The table above is assembled by calling the API. This hands that evidence to a GLM "
-        "model and asks the question the ranking cannot answer on its own: which of these "
-        "machines should actually come out of service."
-    )
 
     evidence_lines = [
         f"{r['Machine']}: {r['Problems the API logged']} findings raised by the API; "
@@ -611,10 +573,9 @@ if rank:
 
     if not llm_agent.available():
         st.info(
-            "`FEATHERLESS_API_KEY` is not set in this container, so the model step is off. "
-            "Everything above still holds — it is computed from the API and the scheduler log, "
-            "not written by a model. Set the key in your shell and `docker compose up` passes "
-            "it through."
+            "`FEATHERLESS_API_KEY` is not set in this container, so the button is off. The "
+            "evidence in the expander is still gathered live from the API. Set the key in your "
+            "shell and `docker compose up` passes it through."
         )
     elif st.button("Run live diagnosis", type="primary"):
         with st.spinner("Asking …"):
