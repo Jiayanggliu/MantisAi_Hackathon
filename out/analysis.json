@@ -1,5 +1,5 @@
 {
-  "generated_at": "2026-09-17T18:36:16.980440+00:00",
+  "generated_at": "2026-09-17T19:09:51.627565+00:00",
   "sample_scope": "Allocated GPU-hours in this telemetry sample; not total cluster capacity.",
   "price_usd_per_gpu_hour": 2.5,
   "total_gpu_hours": 594003.840144,

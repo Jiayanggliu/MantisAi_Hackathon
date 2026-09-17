@@ -1,0 +1,40 @@
+{
+ "team": "MantisAi_Hackathon",
+ "recoverable_gpu_hours": {
+  "point": 123480,
+  "low": 97196,
+  "high": 182564,
+  "confidence": 0.7,
+  "basis": "Mutually exclusive partition of jobs.parquet on (sm_util_avg, sm_util_max); the five buckets sum to 594,004 GPU-h and 74,849 jobs, so nothing is double counted. Point = jobs whose GPU never exceeded 20% SM at peak: avg==0 & max==0 (97,196 GPU-h) plus 0<avg<5 & max<=20 (26,284). Low = only avg==0 & max==0, where no reading of the telemetry makes it useful work. High adds avg<5 & max>20, which did compute at a low duty cycle. gpu_hours is DCGM-measured, not gpu_count x walltime (they differ >10% on 7% of jobs). We did NOT sum the findings' impact_gpu_hours: 23 rules overlap and the naive sum is 931,607 GPU-h, 157% of the cluster. Caveat we state on the dashboard: only 96,137 of the 123,480 has a named reclaiming policy behind it."
+ },
+ "recoverable_usd": {
+  "point": 308700,
+  "low": 242991,
+  "high": 456411,
+  "confidence": 0.7
+ },
+ "cancelled_is_waste": false,
+ "cancelled_rationale": "Not as a category. CANCELLED is 203,930 GPU-h, more than FAILED and TIMEOUT combined, and a researcher killing a run that looks wrong is good practice, not waste. We count only the 36,101 GPU-h of cancelled jobs whose GPU never computed (avg==0 & max==0) plus the cancelled slice of B1. Counting all of it would roughly double the headline.",
+ "card_imbalance_gpu_hours": {
+  "point": 13652,
+  "low": 10000,
+  "high": 16000,
+  "confidence": 0.6,
+  "basis": "gpus.parquet pivoted per gpu_id -- invisible in jobs.parquet, whose sm_util_avg is the mean across a job's cards. Rule thresholds (>=2 cards, busiest >=20% SM, spread >30 points, walltime >1h) reproduce the shipped rule's 689 jobs over 31,613 GPU-h. Idle-card equivalent = gpu_hours x (1 - mean_card_util / busiest_card_util) = 13,652."
+ },
+ "card_imbalance_rationale": "Counted as the idle-card equivalent rather than the whole job, because the busy card was doing real work. The shipped rule reports 14,559; we get 13,652.",
+ "incident_root_cause": "pvc/scratch-lustre-02",
+ "incident_action_scope": "single_resource",
+ "incident_nodes_to_drain": 0,
+ "incident_confidence": 0.74,
+ "incident_degraded_gpu_hours": {
+  "point": 8654,
+  "low": 7000,
+  "high": 10000,
+  "confidence": 0.6
+ },
+ "hardware_attributable_failures": 145,
+ "hardware_attributable_confidence": 0.6,
+ "hardware_attributable_rationale": "31 jobs with hit_node_failure (scheduler-recorded on any attempt, not just final state) plus 114 FAILED jobs on r216287-n200569 carrying exit_code 34560 = exit status 135 (SIGBUS), shared by 3 users who produce that status 0 times across 3,917 jobs on every other machine. We found the node independently, by grouping FAILED jobs on (primary_node, exit_code) and keeping signatures with >=3 distinct users holding >50% of that code's cluster-wide failures; it matches the shipped node-hardware-fault finding. Excludes the other ~18,400 failures: no cross-user, node-local signature, so attributing them to hardware would overstate what fixing hardware recovers.",
+ "notes": "Dashboard on :3000. `make setup` then `docker compose up`; the dashboard container builds out/ itself so no data derived from the MIT release is committed. Two things worth a judge's minute: (1) the shipped generator in bin/ segfaults on roughly half of cold runs on arm64, so scripts/bootstrap.sh retries it; (2) we ship the cluster as a Perfetto trace -- 450 tracks, one slice per job per card -- and a cut-down one showing the silent hardware fault against its rack neighbours."
+}
