@@ -50,7 +50,12 @@ def triage(evidence: str, timeout: int = 90) -> tuple[str, str]:
     r = requests.post(
         f"{BASE}/chat/completions",
         headers={"Authorization": f"Bearer {key}"},
-        json={"model": MODEL, "max_tokens": 700, "temperature": 0.2,
+        # GLM "thinks" before it answers and the thinking counts against
+        # max_tokens: at 700 it ran out of budget mid-thought and returned an
+        # empty content with finish_reason=length. Give it room, and ask it not
+        # to think out loud (Z.ai's flag; a proxy that ignores it does no harm).
+        json={"model": MODEL, "max_tokens": 3000, "temperature": 0.2,
+              "thinking": {"type": "disabled"},
               "messages": [{"role": "system", "content": SYSTEM},
                            {"role": "user", "content": evidence}]},
         timeout=timeout,
@@ -67,6 +72,18 @@ def triage(evidence: str, timeout: int = 90) -> tuple[str, str]:
     if r.status_code != 200:
         raise RuntimeError(f"HTTP {r.status_code}: {str(body)[:200]}")
     try:
-        return body["choices"][0]["message"]["content"].strip(), MODEL
+        choice = body["choices"][0]
+        msg = choice["message"]
     except (KeyError, IndexError):
         raise RuntimeError(f"No completion in the response: {str(body)[:200]}")
+    text = (msg.get("content") or "").strip()
+    if not text:
+        # Budget spent thinking: surface the thinking rather than nothing.
+        thought = (msg.get("reasoning") or msg.get("reasoning_content") or "").strip()
+        if thought:
+            return ("*(The model ran out of room before its final answer; this is its "
+                    "working.)*\n\n" + thought[-1500:]), MODEL
+        raise RuntimeError(
+            f"the model returned no text (finish_reason={choice.get('finish_reason')}, "
+            f"{body.get('usage', {}).get('completion_tokens', '?')} tokens). Try again.")
+    return text, MODEL

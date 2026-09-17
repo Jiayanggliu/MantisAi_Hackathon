@@ -576,6 +576,8 @@ if rank:
         with st.spinner("Asking …"):
             try:
                 answer, model_used = llm_agent.triage(evidence)
+                if not answer.strip():
+                    raise RuntimeError("the model returned an empty answer")
                 st.success(answer)
                 st.caption(f"`{model_used}` via Featherless, given only the evidence above. "
                            f"The key is read from the environment and is not in this repository.")
