@@ -192,3 +192,51 @@ st.caption(
     "Users are hashed in the source data and are not shown: these tiles locate recoverable "
     "capacity, not people."
 )
+
+
+# ---------------------------------------------------------------- trace
+
+st.divider()
+st.subheader("Open the cluster as a trace")
+st.caption(
+    "One track per GPU — 450 of them — and one slice per job that held the card, "
+    "coloured by bucket. Built for [ui.perfetto.dev](https://ui.perfetto.dev): "
+    "download, then drag the file in."
+)
+
+st.warning(
+    "**A gap is not an idle GPU.** This release is a *sample* of the cluster's workload, "
+    "so empty space means no *sampled* job held that card — unsampled jobs ran in some of "
+    "it. MIT states the data is not appropriate for estimating system utilisation. "
+    "The same warning is embedded in the trace's own metadata."
+)
+
+TRACES = [
+    ("out/trace_waste.json.gz", "Waste only (buckets A + B1)",
+     "31,435 slices. The smaller, sharper picture."),
+    ("out/trace.json.gz", "Every job", "95,005 slices across the full 125 days."),
+]
+
+tcols = st.columns(len(TRACES))
+for col, (rel, label, blurb) in zip(tcols, TRACES):
+    path = ROOT / rel
+    with col:
+        st.markdown(f"**{label}**")
+        st.caption(blurb)
+        if path.exists():
+            col.download_button(
+                f"Download ({path.stat().st_size / 1e6:.1f} MB)",
+                data=path.read_bytes(),
+                file_name=path.name,
+                mime="application/gzip",
+                width="stretch",
+            )
+        else:
+            st.caption("Not built yet — run `python scripts/make_trace.py`.")
+
+st.markdown(
+    "**What to look for.** Search the track list for `r216287-n200569`: for about a week "
+    "from 2026-02-27 its two cards are a dense band of failures (217 of its 488 slices) "
+    "while the rest of its rack runs green. The scheduler never marked that machine down. "
+    "Three unrelated people hit SIGBUS on it and on no other machine in 3,917 jobs."
+)

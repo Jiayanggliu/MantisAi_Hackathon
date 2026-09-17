@@ -14,6 +14,13 @@ if [ ! -f /app/out/analysis.json ] || [ ! -f /app/out/jobs_bucketed.parquet ]; t
   echo "analysis.py done."
 fi
 
+# Traces are a bonus view; never let them stop the dashboard coming up.
+if [ ! -f /app/out/trace.json.gz ]; then
+  echo "building Perfetto traces ..."
+  ( cd /app && python scripts/make_trace.py && python scripts/make_trace.py --waste-only ) \
+    || echo "WARN: trace build failed; the dashboard runs without it." >&2
+fi
+
 exec streamlit run /app/dashboard/app.py \
   --server.port=3000 --server.address=0.0.0.0 \
   --server.headless=true --browser.gatherUsageStats=false

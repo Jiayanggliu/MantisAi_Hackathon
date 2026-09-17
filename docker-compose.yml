@@ -11,6 +11,7 @@ services:
     volumes:
       - ./dashboard:/app/dashboard:ro
       - ./analysis.py:/app/analysis.py:ro
+      - ./scripts:/app/scripts:ro
       - ./data:/app/data:ro
       - ./out:/app/out
     environment: [PYTHONUNBUFFERED=1]
