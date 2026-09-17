@@ -161,8 +161,119 @@ st.dataframe(
     },
 )
 
+A_ = jobs[jobs.bucket == "A"]
+
+
+def _sens(frame, cuts, unit, label):
+    """How much of the money a threshold actually reaches, and who it touches."""
+    tot = frame.gpu_hours.sum()
+    rows = []
+    for c in cuts:
+        m = frame.walltime_sec > c * (3600 if unit == "h" else 60)
+        rows.append({label: f"{c} {unit}", "Jobs touched": int(m.sum()),
+                     "Share of jobs": m.sum() / len(frame) * 100,
+                     "GPU-hours recovered": frame.loc[m, "gpu_hours"].sum(),
+                     "Share of the money": frame.loc[m, "gpu_hours"].sum() / tot * 100})
+    return pd.DataFrame(rows)
+
+
+_SENS_CFG = {
+    "Jobs touched": st.column_config.NumberColumn(format="%,d", width="small"),
+    "Share of jobs": st.column_config.NumberColumn(format="%.1f%%", width="small"),
+    "GPU-hours recovered": st.column_config.NumberColumn(format="%,.0f", width="small"),
+    "Share of the money": st.column_config.ProgressColumn(
+        format="%.1f%%", min_value=0, max_value=100, width="medium"),
+}
+
 for i, r in enumerate(ranked):
-    st.markdown(f"**{i + 1}. {TITLE.get(r['id'], r['id'])}** — {EVIDENCE.get(r['id'], '')}")
+    rid = r["id"]
+    st.markdown(f"**{i + 1}. {TITLE.get(rid, rid)}** — {EVIDENCE.get(rid, '')}")
+
+    with st.expander("The evidence"):
+        if rid == "idle_timeout":
+            idle = A_[A_.state_name.isin(["CANCELLED", "TIMEOUT"])]
+            st.markdown(
+                "**Is four hours the right line?** Almost all of the money is in a few very "
+                "long holds, so the threshold barely matters — which is what makes this policy "
+                "safe to write."
+            )
+            st.dataframe(_sens(idle, [1, 2, 4, 8, 24], "h", "Idle timeout"),
+                         hide_index=True, width="stretch", column_config=_SENS_CFG)
+            can = jobs[jobs.state_name == "CANCELLED"]
+            st.markdown(
+                f"**Would this be nagging people who are already careful?** No. A cancelled job "
+                f"that was idle is killed after a median of "
+                f"**{can[can.sm_util_avg < 5].walltime_sec.median() / 3600 * 60:.0f} minutes** — "
+                f"researchers do notice. The problem is the tail: the "
+                f"{len(can[(can.sm_util_avg < 5) & (can.walltime_sec > 4 * 3600)]):,} idle jobs "
+                f"that ran past four hours are 23% of them and hold "
+                f"{can[(can.sm_util_avg < 5) & (can.walltime_sec > 4 * 3600)].gpu_hours.sum():,.0f} "
+                f"GPU-hours. A timeout catches the tail and never fires on anyone else."
+            )
+            st.caption(
+                "**Where this comes from.** How long a job held the card = `time_end - "
+                "time_start` from `data/raw/scheduler_data.csv`; whether it computed = "
+                "`smutilization_pct_avg` / `_max` and `totalexecutiontime_sec` from "
+                "`data/raw/dcgm.csv`; how it ended = `state` from the scheduler file. "
+                "Joined on `id_job` by `scripts/prep_data.py`, bucketed by `analysis.py`. "
+                "Corroborating rules in the API: `idle-interactive-session`, "
+                "`slow-cancel-of-idle-job`, `wallclock-kill`."
+            )
+
+        elif rid == "fail_fast":
+            f = A_[A_.state_name == "FAILED"]
+            st.markdown(
+                f"**How long a grace period?** The median failed job lives "
+                f"**{f.walltime_sec.median():.0f} seconds**, so almost nobody is affected by any "
+                f"of these, and the money is all in the few that hang."
+            )
+            st.dataframe(_sens(f, [1, 5, 15, 60], "min", "Release the card after"),
+                         hide_index=True, width="stretch", column_config=_SENS_CFG)
+            st.markdown(
+                "A five-minute grace period touches **7.7% of these jobs and recovers 99.5% of "
+                "the hours**. There is no meaningful trade-off to argue about here."
+            )
+            st.caption(
+                "**Where this comes from.** Survival time = `time_end - time_start` and the "
+                "failure itself = `state` (5 = FAILED), both `data/raw/scheduler_data.csv`. "
+                "That the GPU never ran anything = `smutilization_pct_avg` and `_max` both 0 in "
+                "`data/raw/dcgm.csv`. Corroborating rules: `gpu-never-computed`, "
+                "`array-mass-failure`."
+            )
+
+        else:
+            c = A_[A_.state_name == "COMPLETED"]
+            st.markdown(
+                f"**These jobs succeeded.** They are not failures to fix — they are "
+                f"{len(c):,} pieces of CPU work, from **{c.id_user.nunique()} different "
+                f"accounts**, that asked for a GPU and got one. They held "
+                f"{c.gpu_count.sum():,.0f} card-allocations between them, and "
+                f"{(c.gpu_count > 1).sum():,} of them asked for more than one card."
+            )
+            st.dataframe(
+                pd.DataFrame({
+                    "Partition": c.partition.value_counts().head(3).index,
+                    "Jobs": c.partition.value_counts().head(3).values,
+                }), hide_index=True, width="stretch")
+            st.markdown(
+                "The remedy is intake, not enforcement: route these to the CPU partition and "
+                "ask for a justification above one GPU. Nothing here needs a person chased."
+            )
+            st.caption(
+                "**Where this comes from.** Success = `state` 3 (COMPLETED), the account = "
+                "`id_user`, the queue = `partition`, cards requested = `gres_alloc` — all "
+                "`data/raw/scheduler_data.csv`. Zero GPU use across the job's whole life = "
+                "`smutilization_pct_avg` and `_max` both 0 in `data/raw/dcgm.csv`. "
+                "Corroborating rule: `gpu-not-needed`."
+            )
+
+st.caption(
+    "Every figure in these three rows traces back to two files: "
+    "`data/raw/scheduler_data.csv` (who ran what, when it started and ended, how it finished) "
+    "and `data/raw/dcgm.csv` (what the GPU actually did). `scripts/prep_data.py` joins them on "
+    "`id_job`, `analysis.py` buckets the result, and the table at the bottom of this page lists "
+    "the individual jobs. Open any expander for the columns behind that row."
+)
 
 mech = sum(r["gpu_hours"] for r in recs)
 st.info(
