@@ -1,0 +1,255 @@
+{
+  "generated_at": "2026-09-17T18:01:40.138595+00:00",
+  "sample_scope": "Allocated GPU-hours in this telemetry sample; not total cluster capacity.",
+  "price_usd_per_gpu_hour": 2.5,
+  "total_gpu_hours": 603813.775194,
+  "target_pct": 0.2,
+  "target_gpu_hours": 120762.755039,
+  "buckets": [
+    {
+      "id": "A",
+      "label": "Never computed",
+      "confidence": "high",
+      "recoverable": true,
+      "jobs": 19903,
+      "gpu_hours": 97295.568025,
+      "usd": 243238.920062,
+      "share": 0.161135,
+      "by_state": {
+        "CANCELLED": {
+          "jobs": 2047,
+          "gpu_hours": 36101.310797
+        },
+        "COMPLETED": {
+          "jobs": 4817,
+          "gpu_hours": 12300.584769
+        },
+        "FAILED": {
+          "jobs": 12171,
+          "gpu_hours": 17065.152219
+        },
+        "OTHER": {
+          "jobs": 34,
+          "gpu_hours": 1158.668703
+        },
+        "TIMEOUT": {
+          "jobs": 834,
+          "gpu_hours": 30669.851536
+        }
+      }
+    },
+    {
+      "id": "B1",
+      "label": "Low use; never meaningfully computed",
+      "confidence": "medium-high",
+      "recoverable": true,
+      "jobs": 5453,
+      "gpu_hours": 27255.130386,
+      "usd": 68137.825965,
+      "share": 0.045138,
+      "by_state": {
+        "CANCELLED": {
+          "jobs": 1042,
+          "gpu_hours": 11023.786617
+        },
+        "COMPLETED": {
+          "jobs": 2301,
+          "gpu_hours": 9039.717436
+        },
+        "FAILED": {
+          "jobs": 1997,
+          "gpu_hours": 2092.445186
+        },
+        "OTHER": {
+          "jobs": 7,
+          "gpu_hours": 1267.046022
+        },
+        "TIMEOUT": {
+          "jobs": 106,
+          "gpu_hours": 3832.135125
+        }
+      }
+    },
+    {
+      "id": "B2",
+      "label": "Low average use; did compute",
+      "confidence": "low",
+      "recoverable": false,
+      "jobs": 4537,
+      "gpu_hours": 60535.811286,
+      "usd": 151339.528215,
+      "share": 0.100256,
+      "by_state": {
+        "CANCELLED": {
+          "jobs": 976,
+          "gpu_hours": 25532.659242
+        },
+        "COMPLETED": {
+          "jobs": 2061,
+          "gpu_hours": 13147.385797
+        },
+        "FAILED": {
+          "jobs": 1150,
+          "gpu_hours": 3356.832606
+        },
+        "OTHER": {
+          "jobs": 14,
+          "gpu_hours": 2745.337808
+        },
+        "TIMEOUT": {
+          "jobs": 336,
+          "gpu_hours": 15753.595833
+        }
+      },
+      "note": "False-positive risk: these jobs reached >20% SM at peak."
+    },
+    {
+      "id": "C",
+      "label": "Low utilization (5\u201320%)",
+      "confidence": "low",
+      "recoverable": false,
+      "jobs": 11065,
+      "gpu_hours": 70201.915028,
+      "usd": 175504.787569,
+      "share": 0.116264,
+      "by_state": {
+        "CANCELLED": {
+          "jobs": 1570,
+          "gpu_hours": 20952.596072
+        },
+        "COMPLETED": {
+          "jobs": 8341,
+          "gpu_hours": 33374.032497
+        },
+        "FAILED": {
+          "jobs": 1082,
+          "gpu_hours": 4621.694531
+        },
+        "OTHER": {
+          "jobs": 15,
+          "gpu_hours": 1883.1054
+        },
+        "TIMEOUT": {
+          "jobs": 57,
+          "gpu_hours": 9370.486528
+        }
+      }
+    },
+    {
+      "id": "D",
+      "label": "Working (\u226520%)",
+      "confidence": "high",
+      "recoverable": false,
+      "jobs": 33933,
+      "gpu_hours": 348525.350469,
+      "usd": 871313.376174,
+      "share": 0.577207,
+      "by_state": {
+        "CANCELLED": {
+          "jobs": 3655,
+          "gpu_hours": 110319.223336
+        },
+        "COMPLETED": {
+          "jobs": 27814,
+          "gpu_hours": 161178.851269
+        },
+        "FAILED": {
+          "jobs": 2187,
+          "gpu_hours": 22897.032519
+        },
+        "OTHER": {
+          "jobs": 66,
+          "gpu_hours": 5804.791158
+        },
+        "TIMEOUT": {
+          "jobs": 211,
+          "gpu_hours": 48325.452186
+        }
+      }
+    }
+  ],
+  "recoverable": {
+    "gpu_hours": 124550.698411,
+    "usd": 311376.746028,
+    "share": 0.206273
+  },
+  "claims": {
+    "recoverable_gpu_hours": {
+      "point": 124550.698411,
+      "low": 97295.568025,
+      "high": 185086.509697,
+      "confidence": 0.7,
+      "basis": "Mutually exclusive partition by SM average and peak. Point includes jobs whose GPU never exceeded 20% SM at peak; GPU-hours are DCGM-measured."
+    },
+    "recoverable_usd": {
+      "point": 311376.746028,
+      "low": 243238.920062,
+      "high": 462716.274243,
+      "confidence": 0.7
+    },
+    "cancelled_is_waste": false,
+    "cancelled_rationale": "Only cancelled jobs in A/B1 are counted. Cancelling a job that was computing can be good practice, not waste."
+  },
+  "recommendations": [
+    {
+      "id": "idle_timeout",
+      "title": "Interactive-session idle timeout",
+      "gpu_hours": 66771.162333,
+      "usd": 166927.905833,
+      "jobs": 2881,
+      "evidence": {
+        "interactive_sessions": 1902,
+        "interactive_gpu_hours": 32775.416836,
+        "share_a_hours_over_4h": 0.976552
+      },
+      "rule_ids": [
+        "rules::idle-interactive-session",
+        "rules::slow-cancel-of-idle-job",
+        "rules::wallclock-kill"
+      ]
+    },
+    {
+      "id": "cpu_queue",
+      "title": "Route GPU-free completed jobs to the CPU queue",
+      "gpu_hours": 12300.584769,
+      "usd": 30751.461924,
+      "jobs": 4817,
+      "evidence": {},
+      "rule_ids": [
+        "rules::gpu-not-needed"
+      ]
+    },
+    {
+      "id": "fail_fast",
+      "title": "Fail fast when startup produces no GPU work",
+      "gpu_hours": 17065.152219,
+      "usd": 42662.880549,
+      "jobs": 12171,
+      "evidence": {},
+      "rule_ids": [
+        "rules::gpu-never-computed",
+        "rules::array-mass-failure"
+      ]
+    }
+  ],
+  "cost_if_wrong": {
+    "b2_gpu_hours": 60535.811286,
+    "b2_usd": 151339.528215,
+    "b2_jobs": 4537,
+    "note": "Jobs an average-only idle policy would hit even though they did compute (peak >20%)."
+  },
+  "dashboard_filter": {
+    "excluded_buckets": [
+      "A",
+      "B1"
+    ],
+    "included_buckets": [
+      "B2",
+      "C",
+      "D"
+    ],
+    "excluded_jobs": 25356,
+    "excluded_gpu_hours": 124550.698411,
+    "note": "A and B1 are retained in jobs_bucketed.parquet but omitted from the actionable dashboard view."
+  }
+}
