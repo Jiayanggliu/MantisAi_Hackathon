@@ -47,7 +47,22 @@ if [ -f data/synthetic/findings.json ]; then
   step "3/4 data/synthetic already present, skipping generate"
 else
   step "3/4 generating data/synthetic/ (the findings the API serves)"
-  docker compose run --rm generate
+  # The shipped generator segfaults intermittently -- seen on arm64 under Docker
+  # Desktop, part way through, on roughly half of cold runs. It is deterministic
+  # when it does finish (findings.json is byte-identical every time and matches
+  # data/checksums.txt), so a retry is safe and is all it needs.
+  for attempt in 1 2 3 4 5; do
+    if docker compose run --rm generate; then
+      break
+    fi
+    if [ "$attempt" = 5 ]; then
+      echo "generate failed 5 times. See data/README.md step 3." >&2
+      exit 1
+    fi
+    echo "generate crashed (attempt $attempt); retrying ..." >&2
+    rm -rf data/synthetic
+    sleep 2
+  done
 fi
 
 # 4. verify -----------------------------------------------------------------
