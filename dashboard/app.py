@@ -327,22 +327,23 @@ st.markdown(
 )
 
 thresh = st.slider(
-    "Kill jobs under 5% average utilisation whose peak never exceeded …",
+    "If we killed every job under 5% average utilisation — and “real work” means a peak above …",
     min_value=0, max_value=60, value=20, step=5, format="%d%% peak SM",
     help="Our recommendation draws the line at 20%. Drag it to see what a different line costs.",
 )
-low_avg = jobs[(jobs.sm_util_avg > 0) & (jobs.sm_util_avg < 5)]
+low_avg = jobs[(jobs.sm_util_avg < 5) & ~((jobs.sm_util_avg == 0) & (jobs.sm_util_max == 0))]
 wrongly, safely = low_avg[low_avg.sm_util_max > thresh], low_avg[low_avg.sm_util_max <= thresh]
 
 m1, m2 = st.columns(2)
-m1.metric("Research we would destroy", f"${wrongly.gpu_hours.sum() * price:,.0f}",
+m1.metric("The naive policy would destroy", f"${wrongly.gpu_hours.sum() * price:,.0f}",
           f"{len(wrongly):,} jobs that did compute", delta_color="inverse")
-m2.metric("Capacity we would reclaim", f"${safely.gpu_hours.sum() * price:,.0f}",
+m2.metric("The naive policy would reclaim", f"${safely.gpu_hours.sum() * price:,.0f}",
           f"{len(safely):,} jobs that never got going")
 st.caption(
-    f"At our chosen line of 20% peak, **\\${bucket['B2']['usd']:,.0f} of real research "
-    f"({bucket['B2']['jobs']:,} jobs) stays untouched** — the cost we are deliberately not "
-    f"incurring. Drag to 0% and every one of those jobs is killed."
+    f"**Our policy adds the peak condition**, so at the 20% line that "
+    f"**\\${bucket['B2']['usd']:,.0f} of real research ({bucket['B2']['jobs']:,} jobs) is never "
+    f"touched** — the cost we deliberately avoid. Drag the line to see how much the naive policy "
+    f"destroys under a stricter or looser definition of real work."
 )
 
 st.subheader("The other expensive mistake: draining machines")
