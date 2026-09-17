@@ -1,6 +1,8 @@
 # `docker compose up` -> dashboard on :3000, API on :8000, Jupyter on :8888.
 services:
-  # The judged deliverable. Reads out/, which analysis.py builds from data/prepped/.
+  # The judged deliverable. On start it builds out/ from data/prepped/ if out/ is
+  # empty, then serves :3000 -- so `docker compose up` stays one command and no
+  # data derived from the MIT release has to be committed.
   dashboard:
     build:
       context: .
@@ -8,7 +10,9 @@ services:
     ports: ["3000:3000"]
     volumes:
       - ./dashboard:/app/dashboard:ro
-      - ./out:/app/out:ro
+      - ./analysis.py:/app/analysis.py:ro
+      - ./data:/app/data:ro
+      - ./out:/app/out
     environment: [PYTHONUNBUFFERED=1]
     depends_on:
       api: {condition: service_healthy}
