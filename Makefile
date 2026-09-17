@@ -1,9 +1,12 @@
-.PHONY: help prep generate check-data up down mcp validate
+.PHONY: help setup prep generate check-data up down mcp validate
 .DEFAULT_GOAL := help
 
 help:
 	@grep -E '^[a-z-]+:.*?## .*$$' $(MAKEFILE_LIST) | \
 	  awk 'BEGIN{FS=":.*?## "}{printf "  \033[36m%-10s\033[0m %s\n", $$1, $$2}'
+
+setup: ## one command for a fresh clone: download + prep + generate + verify
+	./scripts/bootstrap.sh
 
 prep: ## raw CSVs -> data/prepped/ (see data/README.md for the download)
 	docker compose run --rm prep
