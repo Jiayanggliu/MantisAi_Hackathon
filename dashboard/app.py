@@ -321,10 +321,9 @@ if rg:
 
 st.subheader("The expensive mistake: cutting a job that was working")
 st.markdown(
-    "A policy written as *“kill anything under 5% average utilisation”* is the obvious one to "
-    "write, and it is wrong. Average utilisation is a whole-lifetime mean: a job that loads "
-    "data for an hour and then computes hard reads as a low average. **Peak** utilisation is "
-    "what separates a card that never worked from one that did."
+    "*“Kill anything under 5% average utilisation”* is the obvious policy, and it is wrong: a job "
+    "that loads data for an hour and then computes hard has a low average. **Peak** utilisation "
+    "is what tells a card that never worked from one that did."
 )
 
 thresh = st.slider(
@@ -348,33 +347,24 @@ st.caption(
 
 st.subheader("The other expensive mistake: draining machines")
 st.markdown(
-    "The API's own `GET /v1/recommendations` proposes **“drain the top 5 underperforming "
-    "nodes”** for a claimed **\\$57,226**. We recommend against it.\n\n"
-    "That ranking comes from `/v1/resources/underperforming`, which sorts by how many findings "
-    "name a machine and — by its own documentation — does not read `rootCauses`. On this "
-    "cluster the machines carrying the most findings are mostly machines where one person ran "
-    "a broken script repeatedly, or where a Slurm array failed for reasons unrelated to "
-    "hardware: those failures spread thinly across many machines, and the spread is itself the "
-    "evidence the machines are innocent. `POST /v1/causal` confirms none of it.\n\n"
-    "Draining 5 machines removes 10 V100s for a quarter — real capacity — against evidence "
-    "that does not support it. **There is exactly one machine on this cluster worth pulling, "
-    "and it is not on that list** (see the trace below)."
+    "The API's own recommendations propose **draining the top 5 underperforming machines** for "
+    "a claimed **\\$57,226**. We recommend against it. That ranking counts findings, and the "
+    "API's own causal analysis traces those findings to one person's broken script or a storage "
+    "incident — not to the machines. Draining them removes 10 V100s for a quarter to fix "
+    "nothing. **Exactly one machine on this cluster is worth pulling, and it is not on that "
+    "list** (see Live diagnosis below)."
 )
 
-st.subheader("What we would stake the number on")
-st.markdown(
-    f"- **High confidence** on \\${bucket['A']['usd']:,.0f}: those {bucket['A']['jobs']:,} jobs "
-    f"ran no kernel at all — average *and* peak exactly zero. There is no reading of that as "
-    f"useful work.\n"
-    f"- **Lower confidence** on the coverage gap above: the waste in *Barely touched* is "
-    f"visible, but the policy that reclaims it is not yet written.\n"
-    f"- **We do not count cancellations as waste.** CANCELLED is 203,930 GPU-hours, more than "
-    f"failed and timed-out combined. A researcher killing a bad run is good practice. We count "
-    f"only cancelled jobs whose GPU never computed; counting all of it would roughly double the "
-    f"headline and would be dishonest.\n"
-    f"- **The data is a sample.** MIT states it is not appropriate for estimating system "
-    f"utilisation. Every figure here describes these 74,849 jobs, not the cluster in general."
-)
+with st.expander("What we would stake the number on"):
+    st.markdown(
+        f"- **Sure of \\${bucket['A']['usd']:,.0f}** — {bucket['A']['jobs']:,} jobs ran no kernel "
+        f"at all; there is no reading of that as useful work.\n"
+        f"- **Less sure of the rest** — the waste in *Barely touched* is visible, but the policy "
+        f"that reclaims it is not written yet.\n"
+        f"- **Cancellations are not counted as waste** — a researcher killing a bad run is good "
+        f"practice. Counting all 203,930 GPU-hours of them would double the headline.\n"
+        f"- **This is a sample** — every figure describes these 74,849 jobs, not the cluster."
+    )
 
 # ============================================================ EVIDENCE
 st.divider()
