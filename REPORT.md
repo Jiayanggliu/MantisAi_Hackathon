@@ -169,6 +169,27 @@ space means no *sampled* job held that card. `traps.md` is explicit that idle ca
 from gaps in scheduling data — the trace makes those gaps visible without letting you mistake them
 for a measurement.
 
+### Live diagnosis, on the API's tools
+
+The last section of the dashboard is a button. Pressing it gathers evidence live from the
+MantisGrid AI API — `GET /v1/resources/underperforming`, `POST /v1/events/findings` for each
+machine, and `POST /v1/causal` on any finding that carries `rootCauses` — sets it beside the
+failure rate we measure ourselves from the scheduler log, and hands it to a GLM model with one
+question: which of these machines should actually come out of service.
+
+The evidence is the interesting part, and it is shown verbatim before the model sees it. The
+API's eight "worst" machines, followed through `causal`, resolve to **a user's code on seven of
+them and the shared storage volume on the eighth — none to the machine itself** — while
+`r216287-n200569`, the one machine on the cluster that `causal` does attribute to hardware, is
+not in the ranking at all. Ranking by finding count measures how much work a machine received,
+not how broken it is; `causal` is what tells them apart, and the model is asked to reason from
+that, not from the ranking.
+
+The key comes from the environment (`FEATHERLESS_API_KEY`), so the judges' key drops in with
+nothing to edit; without one the button is absent and the rest of the page is unaffected,
+because everything else is computed rather than written by a model. The same three endpoints
+are the `underperforming`, `list_findings` and `causal` tools in `mcp_layer/server.py`.
+
 ### A bug in the challenge
 
 `bin/mantisgrid-generate` **segfaults on roughly half of cold runs** on arm64 under Docker Desktop,

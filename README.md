@@ -26,6 +26,30 @@ against `data/checksums.txt`. The dashboard container builds `out/` itself on fi
 > `bin/mantisgrid-generate` (shipped with the challenge) segfaults on roughly half of cold runs on
 > arm64. `scripts/bootstrap.sh` retries it; it is deterministic when it completes.
 
+## Live diagnosis (optional — needs a Featherless key)
+
+The bottom of the dashboard has a **Run live diagnosis** button. It gathers evidence live from
+the MantisGrid AI API — the ranking of underperforming machines, the findings on each, what
+`POST /v1/causal` resolves them to — puts it beside the failure rate we measure from the
+scheduler log, and hands the lot to a GLM model, which says which machines should actually come
+out of service.
+
+The model runs on [Featherless](https://featherless.ai). The key is read from the environment,
+never from the repository, so use your own:
+
+```bash
+export FEATHERLESS_API_KEY=...                        # required for the button
+export FEATHERLESS_MODEL=zai-org/GLM-4.7-Flash        # optional; this is the default
+export FEATHERLESS_BASE_URL=https://api.featherless.ai/v1   # optional; this is the default
+docker compose up
+```
+
+`docker-compose.yml` passes those three variables through to the dashboard container. **Without
+the key the button is simply absent and everything else on the page works** — the three tiles
+and the evidence behind them are computed from the API and the data, not written by a model.
+A busy model comes back as HTTP 200 with an `error` body; the client checks for that, and the
+page shows a warning rather than failing.
+
 ## What's here
 
 | | |
@@ -35,6 +59,7 @@ against `data/checksums.txt`. The dashboard container builds `out/` itself on fi
 | `scripts/make_trace.py` | the cluster as a Perfetto trace, 450 tracks |
 | `scripts/spine_check.py` | reproduces every number in the report, one command |
 | `scripts/bootstrap.sh` | what `make setup` runs |
+| `dashboard/agent.py` | the live-diagnosis model call (Featherless, key from the environment) |
 | `docs/team/FINDINGS.md` | the working notes behind the report |
 | `api/`, `mcp_layer/`, `starter/`, `docs/` | the challenge's own scaffolding, unchanged |
 
@@ -42,8 +67,10 @@ against `data/checksums.txt`. The dashboard container builds `out/` itself on fi
 
 This project was built with heavy AI assistance, as the challenge expects.
 
-**Models and tools.** Claude Opus 5 and Claude Fable 5.1, via Claude Code (Anthropic's CLI, running
-in the Claude desktop app). No other AI models, coding assistants or agent frameworks were used.
+**Models and tools.** Built with Claude Opus 5 and Claude Fable 5.1, via Claude Code (Anthropic's
+CLI, running in the Claude desktop app). At runtime, the optional live-diagnosis button calls
+`zai-org/GLM-4.7-Flash` on Featherless (overridable with `FEATHERLESS_MODEL`); nothing else on
+the page is model-generated. No other AI models, coding assistants or agent frameworks were used.
 
 **What the AI wrote.** Substantially all of the code in this repository that is ours:
 `dashboard/app.py`, `scripts/make_trace.py`, `scripts/bootstrap.sh`, `scripts/spine_check.py`,
