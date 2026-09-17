@@ -422,11 +422,6 @@ st.caption(
     "One track per GPU, one slice per job that held it. Download, then drag into "
     "[ui.perfetto.dev](https://ui.perfetto.dev)."
 )
-st.warning(
-    "**A gap is not an idle GPU.** This release is a *sample*, so empty space means no "
-    "*sampled* job held that card. MIT states the data is not appropriate for estimating "
-    "system utilisation. The same warning is embedded in the trace metadata."
-)
 
 TRACES = [
     ("out/trace_fault.json.gz", "Start here — one machine, one week",
