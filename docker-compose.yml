@@ -1,5 +1,18 @@
-# `docker compose up` -> API on :8000, Jupyter on :8888.
+# `docker compose up` -> dashboard on :3000, API on :8000, Jupyter on :8888.
 services:
+  # The judged deliverable. Reads out/, which analysis.py builds from data/prepped/.
+  dashboard:
+    build:
+      context: .
+      dockerfile: dashboard/Dockerfile
+    ports: ["3000:3000"]
+    volumes:
+      - ./dashboard:/app/dashboard:ro
+      - ./out:/app/out:ro
+    environment: [PYTHONUNBUFFERED=1]
+    depends_on:
+      api: {condition: service_healthy}
+
   api:
     build:
       context: .

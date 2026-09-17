@@ -1,20 +1,20 @@
 {
-  "generated_at": "2026-09-17T18:01:40.138595+00:00",
+  "generated_at": "2026-09-17T18:29:03.816559+00:00",
   "sample_scope": "Allocated GPU-hours in this telemetry sample; not total cluster capacity.",
   "price_usd_per_gpu_hour": 2.5,
-  "total_gpu_hours": 603813.775194,
+  "total_gpu_hours": 594003.840144,
   "target_pct": 0.2,
-  "target_gpu_hours": 120762.755039,
+  "target_gpu_hours": 118800.768029,
   "buckets": [
     {
       "id": "A",
       "label": "Never computed",
       "confidence": "high",
       "recoverable": true,
-      "jobs": 19903,
-      "gpu_hours": 97295.568025,
-      "usd": 243238.920062,
-      "share": 0.161135,
+      "jobs": 19887,
+      "gpu_hours": 97196.242525,
+      "usd": 242990.606312,
+      "share": 0.163629,
       "by_state": {
         "CANCELLED": {
           "jobs": 2047,
@@ -28,13 +28,21 @@
           "jobs": 12171,
           "gpu_hours": 17065.152219
         },
-        "OTHER": {
-          "jobs": 34,
-          "gpu_hours": 1158.668703
+        "NODE_FAIL": {
+          "jobs": 3,
+          "gpu_hours": 253.765278
         },
         "TIMEOUT": {
           "jobs": 834,
           "gpu_hours": 30669.851536
+        },
+        "UNDECODED_1024": {
+          "jobs": 1,
+          "gpu_hours": 0.008758
+        },
+        "UNDECODED_11": {
+          "jobs": 14,
+          "gpu_hours": 805.569167
         }
       }
     },
@@ -43,10 +51,10 @@
       "label": "Low use; never meaningfully computed",
       "confidence": "medium-high",
       "recoverable": true,
-      "jobs": 5453,
-      "gpu_hours": 27255.130386,
-      "usd": 68137.825965,
-      "share": 0.045138,
+      "jobs": 5448,
+      "gpu_hours": 26283.944919,
+      "usd": 65709.862299,
+      "share": 0.044249,
       "by_state": {
         "CANCELLED": {
           "jobs": 1042,
@@ -60,13 +68,17 @@
           "jobs": 1997,
           "gpu_hours": 2092.445186
         },
-        "OTHER": {
-          "jobs": 7,
-          "gpu_hours": 1267.046022
+        "NODE_FAIL": {
+          "jobs": 1,
+          "gpu_hours": 236.643056
         },
         "TIMEOUT": {
           "jobs": 106,
           "gpu_hours": 3832.135125
+        },
+        "UNDECODED_11": {
+          "jobs": 1,
+          "gpu_hours": 59.2175
         }
       }
     },
@@ -75,10 +87,10 @@
       "label": "Low average use; did compute",
       "confidence": "low",
       "recoverable": false,
-      "jobs": 4537,
-      "gpu_hours": 60535.811286,
-      "usd": 151339.528215,
-      "share": 0.100256,
+      "jobs": 4530,
+      "gpu_hours": 59084.277981,
+      "usd": 147710.694951,
+      "share": 0.099468,
       "by_state": {
         "CANCELLED": {
           "jobs": 976,
@@ -92,13 +104,17 @@
           "jobs": 1150,
           "gpu_hours": 3356.832606
         },
-        "OTHER": {
-          "jobs": 14,
-          "gpu_hours": 2745.337808
+        "NODE_FAIL": {
+          "jobs": 4,
+          "gpu_hours": 1259.729556
         },
         "TIMEOUT": {
           "jobs": 336,
           "gpu_hours": 15753.595833
+        },
+        "UNDECODED_11": {
+          "jobs": 3,
+          "gpu_hours": 34.074947
         }
       },
       "note": "False-positive risk: these jobs reached >20% SM at peak."
@@ -108,10 +124,10 @@
       "label": "Low utilization (5\u201320%)",
       "confidence": "low",
       "recoverable": false,
-      "jobs": 11065,
-      "gpu_hours": 70201.915028,
-      "usd": 175504.787569,
-      "share": 0.116264,
+      "jobs": 11059,
+      "gpu_hours": 68609.202528,
+      "usd": 171523.006319,
+      "share": 0.115503,
       "by_state": {
         "CANCELLED": {
           "jobs": 1570,
@@ -125,13 +141,17 @@
           "jobs": 1082,
           "gpu_hours": 4621.694531
         },
-        "OTHER": {
-          "jobs": 15,
-          "gpu_hours": 1883.1054
+        "NODE_FAIL": {
+          "jobs": 2,
+          "gpu_hours": 277.752994
         },
         "TIMEOUT": {
           "jobs": 57,
           "gpu_hours": 9370.486528
+        },
+        "UNDECODED_11": {
+          "jobs": 7,
+          "gpu_hours": 12.639906
         }
       }
     },
@@ -140,10 +160,10 @@
       "label": "Working (\u226520%)",
       "confidence": "high",
       "recoverable": false,
-      "jobs": 33933,
-      "gpu_hours": 348525.350469,
-      "usd": 871313.376174,
-      "share": 0.577207,
+      "jobs": 33925,
+      "gpu_hours": 342830.172192,
+      "usd": 857075.430479,
+      "share": 0.577151,
       "by_state": {
         "CANCELLED": {
           "jobs": 3655,
@@ -157,34 +177,34 @@
           "jobs": 2187,
           "gpu_hours": 22897.032519
         },
-        "OTHER": {
-          "jobs": 66,
-          "gpu_hours": 5804.791158
-        },
         "TIMEOUT": {
           "jobs": 211,
           "gpu_hours": 48325.452186
+        },
+        "UNDECODED_11": {
+          "jobs": 58,
+          "gpu_hours": 109.612881
         }
       }
     }
   ],
   "recoverable": {
-    "gpu_hours": 124550.698411,
-    "usd": 311376.746028,
-    "share": 0.206273
+    "gpu_hours": 123480.187444,
+    "usd": 308700.468611,
+    "share": 0.207878
   },
   "claims": {
     "recoverable_gpu_hours": {
-      "point": 124550.698411,
-      "low": 97295.568025,
-      "high": 185086.509697,
+      "point": 123480.187444,
+      "low": 97196.242525,
+      "high": 182564.465425,
       "confidence": 0.7,
       "basis": "Mutually exclusive partition by SM average and peak. Point includes jobs whose GPU never exceeded 20% SM at peak; GPU-hours are DCGM-measured."
     },
     "recoverable_usd": {
-      "point": 311376.746028,
-      "low": 243238.920062,
-      "high": 462716.274243,
+      "point": 308700.468611,
+      "low": 242990.606312,
+      "high": 456411.163563,
       "confidence": 0.7
     },
     "cancelled_is_waste": false,
@@ -200,7 +220,7 @@
       "evidence": {
         "interactive_sessions": 1902,
         "interactive_gpu_hours": 32775.416836,
-        "share_a_hours_over_4h": 0.976552
+        "share_a_hours_over_4h": 0.976775
       },
       "rule_ids": [
         "rules::idle-interactive-session",
@@ -233,9 +253,9 @@
     }
   ],
   "cost_if_wrong": {
-    "b2_gpu_hours": 60535.811286,
-    "b2_usd": 151339.528215,
-    "b2_jobs": 4537,
+    "b2_gpu_hours": 59084.277981,
+    "b2_usd": 147710.694951,
+    "b2_jobs": 4530,
     "note": "Jobs an average-only idle policy would hit even though they did compute (peak >20%)."
   },
   "dashboard_filter": {
@@ -248,8 +268,8 @@
       "C",
       "D"
     ],
-    "excluded_jobs": 25356,
-    "excluded_gpu_hours": 124550.698411,
+    "excluded_jobs": 25335,
+    "excluded_gpu_hours": 123480.187444,
     "note": "A and B1 are retained in jobs_bucketed.parquet but omitted from the actionable dashboard view."
   }
 }
