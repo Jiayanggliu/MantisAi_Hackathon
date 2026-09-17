@@ -74,7 +74,7 @@ t1 = pd.DataFrame([
      "What that means": PLAIN[b["id"]][1],
      "Cost": b["usd"],
      "Share of spend": b["share"] * 100,
-     "Cut or keep": ACT[b["id"]]}
+     "Action": ACT[b["id"]]}
     for b in a["buckets"]
 ])
 st.dataframe(
@@ -85,7 +85,7 @@ st.dataframe(
         "Cost": st.column_config.NumberColumn(format="$%,.0f", width="small"),
         "Share of spend": st.column_config.ProgressColumn(
             format="%.1f%%", min_value=0, max_value=100, width="medium"),
-        "Cut or keep": st.column_config.TextColumn(width="small"),
+        "Action": st.column_config.TextColumn(width="small"),
     },
 )
 
