@@ -210,13 +210,16 @@ for i, r in enumerate(ranked):
                 f"{can[(can.sm_util_avg < 5) & (can.walltime_sec > 4 * 3600)].gpu_hours.sum():,.0f} "
                 f"GPU-hours. A timeout catches the tail and never fires on anyone else."
             )
+            st.markdown(
+                "**Where this comes from.** The scheduler's log says how long each job held the "
+                "card and how it ended. The GPU's telemetry says whether anything ran on it. "
+                "Nothing here is estimated."
+            )
             st.caption(
-                "**Where this comes from.** How long a job held the card = `time_end - "
-                "time_start` from `data/raw/scheduler_data.csv`; whether it computed = "
-                "`smutilization_pct_avg` / `_max` and `totalexecutiontime_sec` from "
-                "`data/raw/dcgm.csv`; how it ended = `state` from the scheduler file. "
-                "Joined on `id_job` by `scripts/prep_data.py`, bucketed by `analysis.py`. "
-                "Corroborating rules in the API: `idle-interactive-session`, "
+                "For the engineer: `time_end - time_start` and `state` from "
+                "`data/raw/scheduler_data.csv`; `smutilization_pct_avg` / `_max` from "
+                "`data/raw/dcgm.csv`; joined on `id_job` by `scripts/prep_data.py`. "
+                "The API's own rules agree: `idle-interactive-session`, "
                 "`slow-cancel-of-idle-job`, `wallclock-kill`."
             )
 
@@ -233,11 +236,14 @@ for i, r in enumerate(ranked):
                 "A five-minute grace period touches **7.7% of these jobs and recovers 99.5% of "
                 "the hours**. There is no meaningful trade-off to argue about here."
             )
+            st.markdown(
+                "**Where this comes from.** The scheduler recorded the failure and how long the "
+                "job lasted; the GPU telemetry confirms nothing ever ran on the card."
+            )
             st.caption(
-                "**Where this comes from.** Survival time = `time_end - time_start` and the "
-                "failure itself = `state` (5 = FAILED), both `data/raw/scheduler_data.csv`. "
-                "That the GPU never ran anything = `smutilization_pct_avg` and `_max` both 0 in "
-                "`data/raw/dcgm.csv`. Corroborating rules: `gpu-never-computed`, "
+                "For the engineer: `state` = 5 and `time_end - time_start` from "
+                "`data/raw/scheduler_data.csv`; `smutilization_pct_avg` and `_max` both 0 in "
+                "`data/raw/dcgm.csv`. The API's own rules agree: `gpu-never-computed`, "
                 "`array-mass-failure`."
             )
 
@@ -259,20 +265,21 @@ for i, r in enumerate(ranked):
                 "The remedy is intake, not enforcement: route these to the CPU partition and "
                 "ask for a justification above one GPU. Nothing here needs a person chased."
             )
+            st.markdown(
+                "**Where this comes from.** The scheduler recorded these jobs as finished "
+                "successfully, and which queue and how many cards each asked for. The GPU "
+                "telemetry shows the cards did nothing the whole time."
+            )
             st.caption(
-                "**Where this comes from.** Success = `state` 3 (COMPLETED), the account = "
-                "`id_user`, the queue = `partition`, cards requested = `gres_alloc` — all "
-                "`data/raw/scheduler_data.csv`. Zero GPU use across the job's whole life = "
-                "`smutilization_pct_avg` and `_max` both 0 in `data/raw/dcgm.csv`. "
-                "Corroborating rule: `gpu-not-needed`."
+                "For the engineer: `state` = 3, `id_user`, `partition`, `gres_alloc` from "
+                "`data/raw/scheduler_data.csv`; `smutilization_pct_avg` and `_max` both 0 in "
+                "`data/raw/dcgm.csv`. The API's own rule agrees: `gpu-not-needed`."
             )
 
 st.caption(
-    "Every figure in these three rows traces back to two files: "
-    "`data/raw/scheduler_data.csv` (who ran what, when it started and ended, how it finished) "
-    "and `data/raw/dcgm.csv` (what the GPU actually did). `scripts/prep_data.py` joins them on "
-    "`id_job`, `analysis.py` buckets the result, and the table at the bottom of this page lists "
-    "the individual jobs. Open any expander for the columns behind that row."
+    "Every number here comes from two records the cluster already keeps: **the scheduler's log** "
+    "of who ran what and how it ended, and **the GPU's own telemetry** of what the card did. "
+    "Open any row's evidence to see why we chose the threshold we did."
 )
 
 mech = sum(r["gpu_hours"] for r in recs)
