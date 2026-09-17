@@ -1,14 +1,17 @@
-# 数据在本地生成，暂不提交 —— 见 data/README.md
-data/raw/
-data/prepped/
-data/synthetic/
+# Locally generated data; see data/README.md
+data/
 track-2-raw.zip
+
+# Keep documentation and checksums
 !data/README.md
 !data/checksums.txt
 
+# Python and notebook artifacts
 __pycache__/
 *.pyc
 .venv/
 .ipynb_checkpoints/
 .DS_Store
+
+# Generated analysis outputs
 out/
