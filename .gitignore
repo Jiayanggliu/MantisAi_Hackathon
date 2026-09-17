@@ -1,0 +1,14 @@
+# 数据在本地生成，暂不提交 —— 见 data/README.md
+data/raw/
+data/prepped/
+data/synthetic/
+track-2-raw.zip
+!data/README.md
+!data/checksums.txt
+
+__pycache__/
+*.pyc
+.venv/
+.ipynb_checkpoints/
+.DS_Store
+out/
