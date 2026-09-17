@@ -1,4 +1,4 @@
-# Diagnose is all your need
+# Dashboard Is All You Need
 
 **Cut $308,700 — 21% of GPU spend — without touching a single job that was doing work.**
 

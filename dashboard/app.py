@@ -1,4 +1,4 @@
-"""Diagnose is all your need — Track 2 cluster efficiency dashboard.
+"""Dashboard Is All You Need — Track 2 cluster efficiency dashboard.
 
 Three tiles: where the money goes, where to cut, what it costs if we are wrong.
 Reads out/analysis.json and out/jobs_bucketed.parquet, produced by analysis.py.
@@ -19,7 +19,7 @@ import agent as llm_agent
 ROOT = Path(__file__).resolve().parent.parent
 OUT = ROOT / "out"
 
-st.set_page_config(page_title="Diagnose is all your need", layout="wide")
+st.set_page_config(page_title="Dashboard Is All You Need", layout="wide")
 
 
 @st.cache_data(show_spinner=False)
@@ -58,7 +58,7 @@ PLAIN = {
 }
 ACT = {"A": "Cut", "B1": "Cut", "B2": "Keep", "C": "Keep", "D": "Keep"}
 
-st.title("Diagnose is all your need")
+st.title("Dashboard Is All You Need")
 st.markdown(
     f"### Cut **${rec['usd']:,.0f}** — {rec['share']:.0%} of GPU spend — without touching "
     f"a single job that was doing work."

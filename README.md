@@ -1,4 +1,4 @@
-# Diagnose is all your need
+# Dashboard Is All You Need
 
 **MantisGrid Hackathon 2026 — Track 2, cluster efficiency.**
 
