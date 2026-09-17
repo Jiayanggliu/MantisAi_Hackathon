@@ -108,9 +108,10 @@ with st.expander("How each row is defined, and why we do not add up the API's fi
         "| Light but real use | average < 5%, peak > 20% — it *did* compute |\n"
         "| Moderate use | average 5–20% |\n"
         "| Working hard | average ≥ 20% |\n\n"
-        "That matters. The API's 11,979 findings overlap — one job trips several rules — so "
-        "adding up their impact figures gives 157% of a cluster that only ever allocated "
-        "594,004 GPU-hours. We partition the jobs instead."
+        "Counting each job once is the whole trick. The same wasted job shows up in several "
+        "of the API's problem reports — an idle session is also a job that never computed — so "
+        "adding those reports together claims more waste than the cluster has hours. "
+        "Our five rows add up to exactly what the cluster allocated."
     )
 
 # ============================================================ TILE 2
