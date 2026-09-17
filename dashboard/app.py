@@ -581,7 +581,7 @@ if rank:
         "without a model, so the page runs with no API key."
     )
 
-    st.subheader("Hand the evidence to a model")
+    st.subheader("Live diagnosis — ask the model")
     st.caption(
         "The table above is assembled by calling the API. This hands that evidence to a GLM "
         "model and asks the question the ranking cannot answer on its own: which of these "
@@ -615,7 +615,7 @@ if rank:
             "not written by a model. Set the key in your shell and `docker compose up` passes "
             "it through."
         )
-    elif st.button("Ask the model", type="primary"):
+    elif st.button("Run live diagnosis", type="primary"):
         with st.spinner("Asking …"):
             try:
                 answer, model_used = llm_agent.triage(evidence)
