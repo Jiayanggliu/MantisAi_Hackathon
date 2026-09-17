@@ -512,7 +512,7 @@ if rank:
                 fs = []
             detectors = {f["detectorId"].replace("rules::", "") for f in fs}
             linked = [f for f in fs if f.get("rootCauses")]
-            verdict, culprit = "no causal chain", "—"
+            verdict, culprit = "nothing to trace", "The API has no causal chain here"
             for f in linked[:3]:
                 try:
                     ch = api_causal(f["id"])
@@ -520,30 +520,46 @@ if rank:
                     continue
                 if ch:
                     top = ch[0]["culprit"][0]
-                    culprit = f"{top['type'].replace('k8s:', '')} {top['node']}"
-                    verdict = "resolves to " + ("this machine" if top["node"] == node
-                                                else "something else")
+                    kind = top["type"].replace("k8s:", "")
+                    # Plain words, and never an account id: this page is about
+                    # capacity, not people (traps.md).
+                    if top["node"] == node:
+                        verdict, culprit = "the machine", "This machine is broken"
+                    elif kind == "namespace":
+                        verdict, culprit = "a user's code", "One person's job kept failing here — not the machine"
+                    elif kind == "persistentvolumeclaim":
+                        verdict, culprit = "storage", f"The shared volume {top['node']} — not the machine"
+                    elif kind == "job":
+                        verdict, culprit = "a job array", "A batch of identical tasks failed everywhere — not the machine"
+                    else:
+                        verdict, culprit = kind, f"{kind} {top['node']}"
                     break
             verdicts[node] = (verdict, culprit, sorted(detectors))
             rows.append({
                 "Machine": node,
-                "Findings (API)": r["finding_count"],
-                "Failed / ran (trace)": f"{failed:,} / {total:,}",
+                "Problems the API logged": r["finding_count"],
+                "Jobs that failed here": f"{failed:,} of {total:,}",
                 "Failure rate": (failed / total * 100) if total else 0.0,
-                "Causal verdict": verdict,
-                "Points at": culprit,
+                "Really at fault": verdict,
+                "What causal analysis found": culprit,
             })
 
+    st.markdown(
+        "**The API's eight \"worst\" machines, and what is actually wrong with each.** "
+        "Left: how many problems the API logged against the machine — that is what it ranks "
+        "by. Middle: how often jobs really failed there, from the scheduler log. Right: what "
+        "the API's own causal analysis says the cause is when you follow the chain."
+    )
     st.dataframe(
         pd.DataFrame(rows), hide_index=True, width="stretch",
         column_config={
             "Machine": st.column_config.TextColumn(width="medium"),
-            "Findings (API)": st.column_config.NumberColumn(format="%,d", width="small"),
-            "Failed / ran (trace)": st.column_config.TextColumn(width="small"),
+            "Problems the API logged": st.column_config.NumberColumn(format="%,d", width="small"),
+            "Jobs that failed here": st.column_config.TextColumn(width="small"),
             "Failure rate": st.column_config.ProgressColumn(
-                format="%.0f%%", min_value=0, max_value=100, width="medium"),
-            "Causal verdict": st.column_config.TextColumn(width="medium"),
-            "Points at": st.column_config.TextColumn(width="medium"),
+                format="%.0f%%", min_value=0, max_value=100, width="small"),
+            "Really at fault": st.column_config.TextColumn(width="small"),
+            "What causal analysis found": st.column_config.TextColumn(width="large"),
         },
     )
 
@@ -574,9 +590,9 @@ if rank:
     )
 
     evidence_lines = [
-        f"{r['Machine']}: {r['Findings (API)']} findings raised by the API; "
-        f"measured failure rate {r['Failure rate']:.0f}% ({r['Failed / ran (trace)']} jobs); "
-        f"causal analysis {r['Causal verdict']}, pointing at {r['Points at']}."
+        f"{r['Machine']}: {r['Problems the API logged']} findings raised by the API; "
+        f"measured failure rate {r['Failure rate']:.0f}% ({r['Jobs that failed here']} jobs); "
+        f"causal analysis says the fault is {r['Really at fault']} — {r['What causal analysis found']}."
         for r in rows
     ]
     f_failed2, f_total2 = trace_rate(FAULT)
