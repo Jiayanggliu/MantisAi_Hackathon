@@ -15,3 +15,5 @@ __pycache__/
 
 # Generated analysis outputs
 out/
+# Local data bundles -- never commit anything derived from the MIT release
+data.zip
