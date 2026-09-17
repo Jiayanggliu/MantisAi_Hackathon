@@ -72,6 +72,7 @@ st.header("1 · Where the money is going")
 t1 = pd.DataFrame([
     {"Where it went": PLAIN[b["id"]][0],
      "What that means": PLAIN[b["id"]][1],
+     "GPU-hours": b["gpu_hours"],
      "Cost": b["usd"],
      "Share of spend": b["share"] * 100,
      "Action": ACT[b["id"]]}
@@ -82,6 +83,7 @@ st.dataframe(
     column_config={
         "Where it went": st.column_config.TextColumn(width="medium"),
         "What that means": st.column_config.TextColumn(width="large"),
+        "GPU-hours": st.column_config.NumberColumn(format="%,.0f", width="small"),
         "Cost": st.column_config.NumberColumn(format="$%,.0f", width="small"),
         "Share of spend": st.column_config.ProgressColumn(
             format="%.1f%%", min_value=0, max_value=100, width="medium"),
@@ -106,11 +108,9 @@ with st.expander("How each row is defined, and why we do not add up the API's fi
         "| Light but real use | average < 5%, peak > 20% — it *did* compute |\n"
         "| Moderate use | average 5–20% |\n"
         "| Working hard | average ≥ 20% |\n\n"
-        "The API ships 11,979 findings, each with an `impact_gpu_hours`. Adding that column "
-        "gives **931,607 GPU-hours — 157% of a cluster that only allocated 594,004** — because "
-        "23 rules overlap on the same jobs and mix `lost`, `consumed` and `unused_capacity`, "
-        "which are different quantities. We partition the jobs instead, and use the findings "
-        "as evidence rather than as arithmetic."
+        "That matters. The API's 11,979 findings overlap — one job trips several rules — so "
+        "adding up their impact figures gives 157% of a cluster that only ever allocated "
+        "594,004 GPU-hours. We partition the jobs instead."
     )
 
 # ============================================================ TILE 2
