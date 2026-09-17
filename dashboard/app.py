@@ -553,26 +553,11 @@ if rank:
     t_failed, t_total = trace_rate(top_node)
     in_top = any(r["entity_id"] == FAULT for r in rank)
 
-    st.error(
-        f"**The ranking and the evidence disagree.** `/v1/resources/underperforming` puts "
-        f"**{top_node}** first on {rank[0]['finding_count']} findings — and across the whole "
-        f"window that machine failed {t_failed:,} of {t_total:,} jobs "
-        f"({t_failed / t_total:.0%}). Meanwhile **{FAULT}** "
-        f"{'is also in this list' if in_top else 'is **not in this list at all**'}, and it "
-        f"failed {f_failed:,} of {f_total:,} ({f_failed / f_total:.0%}) — 97% of them inside "
-        f"one week, three unrelated people, one SIGBUS signature that appears on no other "
-        f"machine in 3,917 jobs."
-    )
     st.markdown(
-        "**Why the ranking misses it.** It sorts by how many findings name a machine, and by "
-        "its own documentation does not read `rootCauses`. A machine where one person ran a "
-        "broken script a thousand times collects a thousand findings; a machine that quietly "
-        "corrupts memory for a week collects far fewer. Counting findings measures how much "
-        "work a machine received, not how broken it is.\n\n"
-        "**So the agent does not stop at the ranking.** For each machine it pulls the findings, "
-        "follows any that carry `rootCauses` into `POST /v1/causal`, and reports what the chain "
-        "actually resolves to — the column above. That is the difference between *this machine "
-        "has many problems* and *this machine is the problem*."
+        f"**Ranking by finding count gets this wrong.** The API's first pick, `{top_node}`, "
+        f"failed {t_failed / t_total:.0%} of its jobs. `{FAULT}`, which "
+        f"{'is' if in_top else 'is not even'} in the list, failed {f_failed / f_total:.0%} — "
+        f"and `causal` is what tells them apart."
     )
     st.caption(
         "Tools used: `GET /v1/resources/underperforming`, `POST /v1/events/findings`, "
