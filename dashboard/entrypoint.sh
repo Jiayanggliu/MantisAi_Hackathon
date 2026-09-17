@@ -17,7 +17,9 @@ fi
 # Traces are a bonus view; never let them stop the dashboard coming up.
 if [ ! -f /app/out/trace.json.gz ]; then
   echo "building Perfetto traces ..."
-  ( cd /app && python scripts/make_trace.py && python scripts/make_trace.py --waste-only ) \
+  ( cd /app && python scripts/make_trace.py \
+      && python scripts/make_trace.py --waste-only \
+      && python scripts/make_trace.py --focus r216287-n200569 ) \
     || echo "WARN: trace build failed; the dashboard runs without it." >&2
 fi
 

@@ -212,9 +212,13 @@ st.warning(
 )
 
 TRACES = [
-    ("out/trace_waste.json.gz", "Waste only (buckets A + B1)",
-     "31,435 slices. The smaller, sharper picture."),
-    ("out/trace.json.gz", "Every job", "95,005 slices across the full 125 days."),
+    ("out/trace_fault.json.gz", "Start here — one machine, one week",
+     "64 tracks, 8.4 days, coloured by outcome. The silent hardware fault and the "
+     "rack it sat in."),
+    ("out/trace_waste.json.gz", "The waste (buckets A + B1)",
+     "450 tracks, 31,435 slices, coloured by bucket."),
+    ("out/trace.json.gz", "Everything",
+     "95,005 slices over 125 days. Correct, and unreadable unless you know where to look."),
 ]
 
 tcols = st.columns(len(TRACES))
@@ -224,8 +228,10 @@ for col, (rel, label, blurb) in zip(tcols, TRACES):
         st.markdown(f"**{label}**")
         st.caption(blurb)
         if path.exists():
+            n = path.stat().st_size
+            size = f"{n / 1e3:.0f} KB" if n < 1e6 else f"{n / 1e6:.1f} MB"
             col.download_button(
-                f"Download ({path.stat().st_size / 1e6:.1f} MB)",
+                f"Download ({size})",
                 data=path.read_bytes(),
                 file_name=path.name,
                 mime="application/gzip",
