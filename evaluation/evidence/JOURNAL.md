@@ -11,3 +11,10 @@ reorder previous entries. See `evaluation/evidence/README.md` for the schema.
 - **Git:** `codex/evaluation-framework` @ `4db38e422090` (dirty tree)
 - **Files:** `AGENTS.md`, `CLAUDE.md`, `evaluation/evidence/record.py`, `evaluation/evidence/README.md`, `Makefile`
 - **Commands:** git checkout codex/evaluation-framework
+
+## EV-0002 — 2026-10-31T15:05:24+08:00
+
+- **Actor:** `hybrid` (human reviewed: yes)
+- **Task:** Rename working branch codex/evaluation-framework to eval at user request
+- **Outcome:** Local branch renamed, eval pushed to fork, draft PR #2 opened from ytlin01:eval, PR #1 closed with pointer, old remote branch deleted.
+- **Git:** `eval` @ `12a0f0b60dcd` (dirty tree)
