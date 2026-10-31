@@ -26,25 +26,6 @@ submission artifact whose numbers must stay reproducible.
 5. **Keep changes reviewable:** small commits, clear messages, no drive-by
    refactors unrelated to the task.
 
-## Evidence protocol (required)
-
-This repository keeps an auditable record of AI/agent involvement in
-development. **Every AI-assisted unit of work gets a journal entry before it
-is committed.**
-
-- Record entries with:
-  `python evaluation/evidence/record.py --actor ai:<model> --task "<what was asked>" --outcome "<what happened>" [--files f1 f2] [--commands "cmd"] [--reviewed]`
-- or via `make evidence ACTOR=... TASK=... OUTCOME=...`
-- Entries capture timestamp, git branch/SHA, actor (`human` / `ai:<model>` /
-  `hybrid`), task, outcome, files touched, and whether a human reviewed.
-- Storage: `evaluation/evidence/JOURNAL.md` (human-readable) and
-  `evaluation/evidence/log.jsonl` (append-only, machine-readable). Both are
-  committed — reviewers see the trail in the PR.
-- See `evaluation/evidence/README.md` for the full schema.
-
-If you are an agent making a commit, the commit message should reference the
-journal entry id (e.g. `EV-0007`).
-
 ## Evaluation modes (being built)
 
 | Command | What it runs | Prerequisites |

@@ -1,4 +1,4 @@
-.PHONY: help setup prep generate check-data up down mcp validate evidence
+.PHONY: help setup prep generate check-data up down mcp validate
 .DEFAULT_GOAL := help
 
 help:
@@ -28,6 +28,3 @@ mcp: ## run the MCP server for an agent client (needs uv + prep/generate)
 
 validate: ## check your claims.json before submitting: make validate CLAIMS=claims.json
 	python scripts/validate_submission.py --claims $(or $(CLAIMS),claims.json) $(if $(URL),--url $(URL),)
-
-evidence: ## append an AI-usage evidence entry: make evidence ACTOR=... TASK=... OUTCOME=...
-	python evaluation/evidence/record.py --actor "$(ACTOR)" --task "$(TASK)" --outcome "$(OUTCOME)" $(if $(FILES),--files $(FILES),) $(if $(REVIEWED),--reviewed,)
