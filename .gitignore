@@ -10,11 +10,17 @@ track-2-raw.zip
 __pycache__/
 *.pyc
 .venv/
+.uv-cache/
+.uv-python/
+.mplconfig/
 .ipynb_checkpoints/
 .DS_Store
 
 # Generated analysis outputs
 out/
+# Evaluation self-check scratch directories (sandbox-created, not deletable)
+.evalcheck-*/
+.probe-*/
 # Local data bundles -- never commit anything derived from the MIT release
 data.zip
 

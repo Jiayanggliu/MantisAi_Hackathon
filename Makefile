@@ -1,4 +1,4 @@
-.PHONY: help setup prep generate check-data up down mcp validate
+.PHONY: help setup prep generate check-data up down mcp validate eval eval-data eval-live
 .DEFAULT_GOAL := help
 
 help:
@@ -28,3 +28,12 @@ mcp: ## run the MCP server for an agent client (needs uv + prep/generate)
 
 validate: ## check your claims.json before submitting: make validate CLAIMS=claims.json
 	python scripts/validate_submission.py --claims $(or $(CLAIMS),claims.json) $(if $(URL),--url $(URL),)
+
+eval: ## deterministic checks on synthetic fixtures (offline, hermetic)
+	python -m evaluation eval
+
+eval-data: ## checks against prepared telemetry (needs data/prepped/*.parquet)
+	python -m evaluation eval-data
+
+eval-live: ## real model evaluation (needs credentials + prepped data)
+	python -m evaluation eval-live
